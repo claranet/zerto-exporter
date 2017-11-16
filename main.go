@@ -11,7 +11,7 @@
 package main
 
 import (
-	"./zerto"
+	"github.com/claranet/zerto-exporter/zerto"
 
 	"flag"
 	"net/http"
