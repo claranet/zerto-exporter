@@ -58,4 +58,4 @@ External Links
 
 * https://www.zerto.com
 * https://prometheus.io
-* [Zerto REST-API Documentation](http://s3.amazonaws.com/zertodownload_docs/Latest/Zerto Virtual Replication Zerto Virtual Manager %28ZVM%29 - vSphere Online Help/index.html#page/RestfulAPIs/APIsIntro.2.1.html#)
+* [Zerto REST-API Documentation](http://s3.amazonaws.com/zertodownload_docs/Latest/Zerto%20Virtual%20Replication%20Zerto%20Virtual%20Manager%20%28ZVM%29%20-%20vSphere%20Online%20Help/index.html#page/RestfulAPIs/APIsIntro.2.1.html)
