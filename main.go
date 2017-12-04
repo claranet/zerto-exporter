@@ -96,7 +96,7 @@ func NewExporter() *Exporter {
 		ZertoVpgActualRpo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_actual_rpo",
 			Help: "Actual RPO of the VPG.",
-		}, defaultLabels, ),
+		}, append(defaultLabels, "source", "target"), ),
 		ZertoVpgConfiguredRpoSeconds: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_configured_rpo",
 			Help: "Configured RPO of the VPG.",
@@ -254,7 +254,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		g.Set(float64(vpgs[i].UsedStorageInMB))
 		g.Collect(ch)
 
-		g = e.ZertoVpgActualRpo.WithLabelValues(vpgs[i].VpgName, vpgs[i].OrganizationName)
+		g = e.ZertoVpgActualRpo.WithLabelValues(vpgs[i].VpgName, vpgs[i].OrganizationName, vpgs[i].SourceSite, vpgs[i].TargetSite)
 		g.Set(float64(vpgs[i].ActualRPO))
 		g.Collect(ch)
 
