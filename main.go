@@ -13,6 +13,8 @@ package main
 import (
 	"github.com/claranet/zerto-exporter/zerto"
 
+	"os"
+	"fmt"
 	"flag"
 	"net/http"
 	"time"
@@ -20,8 +22,11 @@ import (
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/log"
 )
+
+const AppVersion = "0.1.1"
 
 var (
 	namespace		= "zerto"
@@ -30,6 +35,7 @@ var (
 	zertoPassword		= flag.String("zerto.password", "", "Zerto API User Password")
 	zertoMaxSessionAge	= flag.Int("zerto.session-age", 3600, "Zerto Session recreation Time")
 	listenAddress		= flag.String("listen-address", ":9403", "The address to lisiten on for HTTP requests.")
+	version         = flag.Bool("version", false, "Prints current version")
 )
 
 var (
@@ -40,38 +46,40 @@ var (
 )
 
 type Exporter struct {
-	ZertoVpgActualRpo		*prometheus.GaugeVec
-	ZertoVpgCountVm			*prometheus.GaugeVec
-	ZertoVpgThroughputInMB		*prometheus.GaugeVec
-	ZertoVpgUsedStorageInMB		*prometheus.GaugeVec
+	ZertoVpgActualRpo							*prometheus.GaugeVec
+	ZertoVpgCountVm								*prometheus.GaugeVec
+	ZertoVpgThroughputInMB				*prometheus.GaugeVec
+	ZertoVpgUsedStorageInMB				*prometheus.GaugeVec
 	ZertoVpgConfiguredRpoSeconds	*prometheus.GaugeVec
-	ZertoVpgIops			*prometheus.GaugeVec
-	ZertoVpgStatus			*prometheus.GaugeVec
-	ZertoVpgSubStatus		*prometheus.GaugeVec
+	ZertoVpgIops									*prometheus.GaugeVec
+	ZertoVpgStatus								*prometheus.GaugeVec
+	ZertoVpgSubStatus							*prometheus.GaugeVec
 
 	ZertoLocalsiteReplicationToSelf	*prometheus.GaugeVec
-	ZertoPeersitePairingStatus	*prometheus.GaugeVec
+	ZertoPeersitePairingStatus			*prometheus.GaugeVec
 
-	ZertoVraStatus			*prometheus.GaugeVec
-	ZertoVraProtectedVms		*prometheus.GaugeVec
-	ZertoVraProtectedVolumes	*prometheus.GaugeVec
-	ZertoVraProtectedVpgs		*prometheus.GaugeVec
+	ZertoVraStatus									*prometheus.GaugeVec
+	ZertoVraProtectedVms						*prometheus.GaugeVec
+	ZertoVraProtectedVolumes				*prometheus.GaugeVec
+	ZertoVraProtectedVpgs						*prometheus.GaugeVec
 
-	ZertoVmActualRpo		*prometheus.GaugeVec
-	ZertoVmIops			*prometheus.GaugeVec
-	ZertoVmJournalUsedStorageMb	*prometheus.GaugeVec
-	ZertoVmProvisionedStorageInMB	*prometheus.GaugeVec
+	ZertoVmActualRpo								*prometheus.GaugeVec
+	ZertoVmIops											*prometheus.GaugeVec
+	ZertoVmJournalUsedStorageMb			*prometheus.GaugeVec
+	ZertoVmProvisionedStorageInMB		*prometheus.GaugeVec
 	ZertoVmOutgoingBandWidthInMbps	*prometheus.GaugeVec
-	ZertoVmThroughputInMB		*prometheus.GaugeVec
-	ZertoVmUsedStorageInMB		*prometheus.GaugeVec
-	ZertoVmStatus			*prometheus.GaugeVec
+	ZertoVmThroughputInMB						*prometheus.GaugeVec
+	ZertoVmUsedStorageInMB					*prometheus.GaugeVec
+	ZertoVmStatus										*prometheus.GaugeVec
 
-	ZertoTaskStatus			*prometheus.GaugeVec
-	ZertoTaskProgress		*prometheus.GaugeVec
-	ZertoTaskStarted		*prometheus.GaugeVec
-	ZertoTaskCompleted		*prometheus.GaugeVec
+	ZertoTaskStatus									*prometheus.GaugeVec
+	ZertoTaskProgress								*prometheus.GaugeVec
+	ZertoTaskStarted								*prometheus.GaugeVec
+	ZertoTaskCompleted							*prometheus.GaugeVec
 
-	ZertoAlertsCount		*prometheus.GaugeVec
+	ZertoAlertsCount								*prometheus.GaugeVec
+
+	ZertoLicenseExpiryTime					*prometheus.GaugeVec
 }
 
 func NewExporter() *Exporter {
@@ -196,6 +204,11 @@ func NewExporter() *Exporter {
 			Namespace: namespace, Name: "alerts_count",
 			Help: "Count Zerto Alerts, level: error|warning",
 		}, alertsDefaultLabels, ),
+
+		ZertoLicenseExpiryTime: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace, Name: "licencse_expireration_time",
+			Help: "License Expiry Time",
+		}, []string {}, ),
 	}
 }
 
@@ -232,6 +245,8 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	e.ZertoTaskCompleted.Describe(ch)
 
 	e.ZertoAlertsCount.Describe(ch)
+
+	e.ZertoLicenseExpiryTime.Describe(ch)
 }
 
 
@@ -278,6 +293,12 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	local := zertoApi.Localsite()
 	g := e.ZertoLocalsiteReplicationToSelf.WithLabelValues(local.Location, local.Version)
 	if local.IsReplicationToSelfEnabled { g.Set(1) } else { g.Set(0) }
+	g.Collect(ch)
+
+	license := zertoApi.LicenseInformations()
+	t, _ := time.Parse("2006-01-02T15:04:05.000Z", license.Details.ExpiryTime)
+	g = e.ZertoLicenseExpiryTime.WithLabelValues()
+	g.Set(float64(t.Unix()))
 	g.Collect(ch)
 
 	peers := zertoApi.ListPeersites()
@@ -417,13 +438,18 @@ func openZertoSession() {
 func main() {
 	flag.Parse()
 
+	if *version {
+		fmt.Println(AppVersion)
+		os.Exit(0)
+	}
+
 	log.Debug("Create Zerto instance")
 	zertoApi = zerto.NewZerto(*zertoUrl, *zertoUser, *zertoPassword)
 
 	exporter := NewExporter()
 	prometheus.MustRegister(exporter)
 
-	http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
 		<head><title>NameNode Exporter</title></head>
