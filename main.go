@@ -206,7 +206,7 @@ func NewExporter() *Exporter {
 		}, alertsDefaultLabels, ),
 
 		ZertoLicenseExpiryTime: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: namespace, Name: "licencse_expireration_time",
+			Namespace: namespace, Name: "license_expireration_time",
 			Help: "License Expiry Time",
 		}, []string {}, ),
 	}
