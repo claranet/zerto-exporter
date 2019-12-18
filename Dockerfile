@@ -17,7 +17,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -tags netgo -ldflags '-w'
 FROM quay.io/prometheus/busybox:latest
 
 LABEL maintainer "Martin Weber <martin.weber@de.clara.net>"
-LABEL version "0.1.2"
+LABEL version "0.1.3"
 
 WORKDIR /
 COPY --from=builder /go/src/github.com/claranet/zerto-exporter/zerto-exporter .
