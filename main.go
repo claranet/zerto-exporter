@@ -26,7 +26,7 @@ import (
 	"github.com/prometheus/log"
 )
 
-const AppVersion = "0.1.3"
+const AppVersion = "0.2.0"
 
 var (
 	namespace		= "zerto"
