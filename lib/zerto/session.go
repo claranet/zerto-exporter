@@ -5,6 +5,8 @@
 //
 
 package zerto
+import	"github.com/prometheus/log"
+
 
 func (z *Zerto) IsSessionOpen() bool {
 	return z.sessionToken != ""
@@ -12,14 +14,13 @@ func (z *Zerto) IsSessionOpen() bool {
 
 func (z *Zerto) OpenSession() {
 
-	resp, err := z.makeRequest("POST", "/session/add", RequestParams{body: `{"AuthenticationMethod": "1"}`})
+	resp, err := z.makeRequest("POST", "/session/add", RequestParams{})
 	if err != nil {
 //		log.Fatal(err)
 	}
-	z.sessionToken = resp.Header.Get("X-Zerto-Session")
-//	log.Printf("%#v", resp.Body)
-
-///	log.Print("Session Token: " + z.sessionToken)
+	z.sessionToken = resp.Header.Get("x-zerto-session")
+	log.Debug(resp.Header)
+	log.Debug("Session Token: " + z.sessionToken)
 
 }
 

@@ -11,7 +11,7 @@
 package main
 
 import (
-	"github.com/claranet/zerto-exporter/zerto"
+	"./lib/zerto"
 
 	"os"
 	"fmt"
@@ -296,6 +296,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	g.Collect(ch)
 
 	license := zertoApi.LicenseInformations()
+	log.Debug(license.Details.ExpiryTime)
 	t, _ := time.Parse("2006-01-02T15:04:05.000Z", license.Details.ExpiryTime)
 	g = e.ZertoLicenseExpiryTime.WithLabelValues()
 	g.Set(float64(t.Unix()))

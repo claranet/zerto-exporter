@@ -6,7 +6,7 @@
 package zerto
 
 import "encoding/json"
-
+import "github.com/prometheus/log"
 //
 // /v1/license
 //
@@ -43,6 +43,8 @@ func (z *Zerto) LicenseInformations() ZertoLicense {
 
 	var d ZertoLicense
 	data.Decode(&d)
+
+	log.Debug(d)
 
 	return d
 }
