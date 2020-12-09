@@ -4,9 +4,9 @@
 
 FROM golang:1.15.6 AS builder
 
-ENV GOPATH /go/src/graylog-exporter
+ENV GOPATH /go/src/zerto-exporter
 
-WORKDIR /go/src/graylog-exporter
+WORKDIR /go/src/zerto-exporter
 COPY . .
 RUN echo "> GOPATH: " $GOPATH
 RUN go get -d
@@ -19,6 +19,6 @@ LABEL maintainer "Martin Weber <martin.weber@de.clara.net>"
 LABEL version "0.1.3"
 
 WORKDIR /
-COPY --from=builder /go/bin/zerto-exporter .
+COPY --from=builder /go/src/zerto-exporter/zerto-exporter /usr/local/bin/zerto-exporter
 EXPOSE 9403
-ENTRYPOINT ["/zerto-exporter"]
+ENTRYPOINT ["/usr/local/bin/zerto-exporter"]
