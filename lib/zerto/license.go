@@ -6,7 +6,8 @@
 package zerto
 
 import "encoding/json"
-import "github.com/prometheus/log"
+//import "github.com/prometheus/log"
+
 //
 // /v1/license
 //
@@ -19,12 +20,12 @@ type ZertoLicenseDetails struct {
 	ExpiryTime				string
 	LicenseKey				string
 	LicenseType				string
-	MaxVms						string
+	MaxVms						int
 }
 
 type ZertoLicenseUsage struct {
 	SitesUsage				*ZertoLicenseSiteUsage
-	TotalVmsCount			float64
+	TotalVmsCount			int
 }
 
 type ZertoLicenseSiteUsage struct {
@@ -44,7 +45,7 @@ func (z *Zerto) LicenseInformations() ZertoLicense {
 	var d ZertoLicense
 	data.Decode(&d)
 
-	log.Debug(d)
+	//log.Debug(d)
 
 	return d
 }

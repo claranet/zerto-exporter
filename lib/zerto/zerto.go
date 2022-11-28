@@ -8,7 +8,7 @@ package zerto
 
 import (
 //	"os"
-	"github.com/prometheus/log"
+	// "github.com/prometheus/log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -40,11 +40,11 @@ func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*ht
 		_url += "?" + p.params.Encode()
 	}
 
-	log.Debug(_url)
-	req, err := http.NewRequest(reqType, _url, strings.NewReader(body))
-	if err != nil {
-		log.Fatal(err)
-	}
+	// log.Debug(_url)
+	req, _ := http.NewRequest(reqType, _url, strings.NewReader(body))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	req.Header.Set("Content-Type", "application/json")
 
 	if z.sessionToken == "" {
@@ -53,10 +53,10 @@ func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*ht
 		req.Header.Set("x-zerto-session", z.sessionToken)
 	}
 
-	log.Debug("Reuest Headers ", req.Header)
+	// log.Debug("Reuest Headers ", req.Header)
 
-	resp, err := netClient.Do(req)
-	if err != nil {	log.Fatal(err); return nil, err }
+	resp, _ := netClient.Do(req)
+	// if err != nil {	log.Fatal(err); return nil, err }
 
 	return resp, nil
 }
@@ -64,9 +64,6 @@ func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*ht
 
 
 func NewZerto(url string, username string, password string) *Zerto {
-//	log.SetOutput(os.Stdout)
-//	log.SetPrefix("Zerto Logger")
-
 	return &Zerto {
 		url: url,
 		username: username,

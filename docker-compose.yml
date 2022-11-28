@@ -1,0 +1,8 @@
+---
+version: "3"
+services:
+  exporter:
+    image: claranet/zerto-exporter
+    ports:
+      - 9403:9403
+    command: "-zerto.url ${ZERTO_URL} -zerto.username ${ZERTO_USERNAME} -zerto.password ${ZERTO_PASSWORD}"

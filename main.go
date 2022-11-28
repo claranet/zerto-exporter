@@ -11,7 +11,8 @@
 package main
 
 import (
-	"./lib/zerto"
+	"github.com/claranet/zerto-exporter/lib/zerto"
+	log "github.com/sirupsen/logrus"
 
 	"os"
 	"fmt"
@@ -23,7 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/log"
+
 )
 
 const AppVersion = "0.2.0"
@@ -252,8 +253,6 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
-	openZertoSession()
-
 	vpgs := zertoApi.ListVpg()
 
 	for i:=0; i<len(vpgs); i++ {
@@ -431,7 +430,12 @@ func openZertoSession() {
 
 	if !zertoApi.IsSessionOpen() {
 		log.Debug("Create new Session")
-		zertoApi.OpenSession()
+		err := zertoApi.OpenSession()
+		if err != nil {
+			log.Fatal("Failed to open Session - Check credetials")
+			os.Exit(1)
+		}
+
 		zertoSessionAge = time.Now().Unix()
 	}
 }
@@ -446,6 +450,13 @@ func main() {
 
 	log.Debug("Create Zerto instance")
 	zertoApi = zerto.NewZerto(*zertoUrl, *zertoUser, *zertoPassword)
+
+	openZertoSession()
+
+	if ! zertoApi.IsSessionOpen() {
+		log.Fatal("No Session opened")
+		os.Exit(1)
+	}
 
 	exporter := NewExporter()
 	prometheus.MustRegister(exporter)
