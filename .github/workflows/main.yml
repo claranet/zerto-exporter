@@ -35,5 +35,5 @@ jobs:
           push: true
           tags: |
             claranet/zerto-exporter:latest
-            claranet/zerto-exporter:v0.2.1
+            claranet/zerto-exporter:v1.0.0
           
