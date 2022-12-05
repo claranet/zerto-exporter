@@ -44,7 +44,7 @@ type EarliestCheckpoint struct {
 }
 
 func (z *Zerto) ListVpg() []ZertoVpg {
-	resp, _ := z.makeRequest("GET", "/vpgs", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/vpgs", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var c []ZertoVpg

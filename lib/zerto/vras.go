@@ -39,7 +39,7 @@ type ZertoVraCounter struct {
 }
 
 func (z *Zerto) ListVras() []ZertoVra {
-	resp, _ := z.makeRequest("GET", "/vras", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/vras", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var d []ZertoVra

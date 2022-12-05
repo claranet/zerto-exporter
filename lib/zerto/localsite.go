@@ -39,7 +39,7 @@ type ZertoLink struct {
 // Fetch Information about local Zerto instance
 //
 func (z *Zerto) Localsite() ZertoLocalsite {
-	resp, _ := z.makeRequest("GET", "/localsite", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/localsite", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var d ZertoLocalsite

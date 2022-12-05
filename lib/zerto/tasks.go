@@ -25,7 +25,7 @@ type ZertoTaskStatus struct {
 }
 
 func (z *Zerto) ListTasks() []ZertoTask {
-	resp, _ := z.makeRequest("GET", "/tasks", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/tasks", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var d []ZertoTask

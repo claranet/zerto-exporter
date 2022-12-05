@@ -9,9 +9,9 @@ package zerto
 
 import (
  	log "github.com/sirupsen/logrus"
+	"encoding/json"
 	"errors"
 )
-
 
 func (z *Zerto) IsSessionOpen() bool {
 	return z.sessionToken != ""
@@ -19,13 +19,28 @@ func (z *Zerto) IsSessionOpen() bool {
 
 func (z *Zerto) OpenSession() error {
 
-	resp, err := z.makeRequest("POST", "/session/add", RequestParams{})
+	resp, err := z.makeRequest("POST", "/v1/session/add", RequestParams{})
 	if err != nil {
 		log.Fatal(err)
 		return err
 	}
 
-	z.sessionToken = resp.Header.Get("x-zerto-session")
+	if resp.StatusCode >= 400 {
+		z.authProvider = "keycloak"
+
+		body := "grant_type=password&client_id=zerto-client&username=" + z.username + "&password=" + z.password
+		log.Debug(body)
+		resp, _ := z.makeRequest("POST", "/auth/realms/zerto/protocol/openid-connect/token", RequestParams{body: body})
+
+		data := json.NewDecoder(resp.Body)
+		var d map[string]string
+		data.Decode(&d)
+
+		z.sessionToken = d["access_token"]
+	} else {
+		z.sessionToken = resp.Header.Get("x-zerto-session")
+	}
+
 	log.Debug(resp.Header)
 	log.Debug("Session Token: " + z.sessionToken)
 	if ! z.IsSessionOpen() {
@@ -35,6 +50,6 @@ func (z *Zerto) OpenSession() error {
 }
 
 func (z *Zerto) CloseSession() {
-	z.makeRequest("DELETE", "/session", RequestParams{})
+	z.makeRequest("DELETE", "/v1/session", RequestParams{})
 	z.sessionToken = ""
 }

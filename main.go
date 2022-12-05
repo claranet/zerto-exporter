@@ -441,6 +441,7 @@ func openZertoSession() {
 }
 
 func main() {
+	log.SetLevel(log.DebugLevel)
 	flag.Parse()
 
 	if *version {

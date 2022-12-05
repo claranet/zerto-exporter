@@ -24,7 +24,7 @@ type ZertoPeersite struct {
 }
 
 func (z *Zerto) ListPeersites() []ZertoPeersite {
-	resp, _ := z.makeRequest("GET", "/peersites", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/peersites", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var d []ZertoPeersite

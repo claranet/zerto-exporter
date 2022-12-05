@@ -60,7 +60,7 @@ func newZertoVm() *ZertoVm {
 }
 
 func (z *Zerto) ListVms() []ZertoVm {
-	resp, _ := z.makeRequest("GET", "/vms", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/vms", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var d []ZertoVm

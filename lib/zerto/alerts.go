@@ -25,7 +25,7 @@ type ZertoAlert struct {
 }
 
 func (z *Zerto) ListAlerts() []ZertoAlert {
-	resp, _ := z.makeRequest("GET", "/alerts", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/alerts", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var d []ZertoAlert
@@ -38,7 +38,7 @@ func (z *Zerto) ListErrors() []ZertoAlert {
 	v := url.Values{}
 	v.Add("level", "error")
 
-	resp, _ := z.makeRequest("GET", "/alerts", RequestParams{params: v})
+	resp, _ := z.makeRequest("GET", "/v1/alerts", RequestParams{params: v})
 	data := json.NewDecoder(resp.Body)
 
 	var d []ZertoAlert
@@ -51,7 +51,7 @@ func (z *Zerto) ListWarnings() []ZertoAlert {
 	v := url.Values{}
 	v.Add("level", "warning")
 
-	resp, _ := z.makeRequest("GET", "/alerts", RequestParams{params: v})
+	resp, _ := z.makeRequest("GET", "/v1/alerts", RequestParams{params: v})
 	data := json.NewDecoder(resp.Body)
 
 	var d []ZertoAlert

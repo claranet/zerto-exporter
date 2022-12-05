@@ -39,7 +39,7 @@ type ZertoLicenseSiteUsage struct {
 // Fetch Information about local Zerto instance
 //
 func (z *Zerto) LicenseInformations() ZertoLicense {
-	resp, _ := z.makeRequest("GET", "/license", RequestParams{})
+	resp, _ := z.makeRequest("GET", "/v1/license", RequestParams{})
 	data := json.NewDecoder(resp.Body)
 
 	var d ZertoLicense

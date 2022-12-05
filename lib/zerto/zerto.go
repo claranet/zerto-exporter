@@ -13,6 +13,8 @@ import (
 	"net/url"
 	"strings"
 	"crypto/tls"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type RequestParams struct {
@@ -26,15 +28,17 @@ type Zerto struct {
 	password	string
 
 	sessionToken	string
+	authProvider	string
 }
 
 func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*http.Response, error)  {
-	_url := z.url + "/v1/" + strings.TrimLeft(action, "/")
+	_url := z.url + "/" + strings.TrimLeft(action, "/")
 
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
 	var netClient = http.Client{Transport: tr}
 
 	body := p.body
+	log.Debug(body)
 
 	if(len(p.params) > 0) {
 		_url += "?" + p.params.Encode()
@@ -47,13 +51,23 @@ func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*ht
 	// }
 	req.Header.Set("Content-Type", "application/json")
 
-	if z.sessionToken == "" {
-		req.SetBasicAuth(z.username, z.password)
-	} else {
-		req.Header.Set("x-zerto-session", z.sessionToken)
+	if z.authProvider == "zerto" {
+		if z.sessionToken == "" {
+			req.SetBasicAuth(z.username, z.password)
+		} else {
+			req.Header.Set("x-zerto-session", z.sessionToken)
+		}
 	}
 
-	// log.Debug("Reuest Headers ", req.Header)
+	if z.authProvider == "keycloak" {
+		if z.sessionToken == "" {
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		} else {
+			req.Header.Set("Authorization", "Bearer " + z.sessionToken)
+		}
+	}
+
+	log.Debug("Reuest Headers ", req.Header)
 
 	resp, _ := netClient.Do(req)
 	// if err != nil {	log.Fatal(err); return nil, err }
@@ -69,5 +83,6 @@ func NewZerto(url string, username string, password string) *Zerto {
 		username: username,
 		password: password,
 		sessionToken: "",
+		authProvider: "zerto",
 	}
 }
