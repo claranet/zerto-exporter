@@ -13,6 +13,8 @@ Tested & Supported
 
 Currently we just tested Zerto for vSphere!
 
+Tested on __Windows ZVM__ and __Linux ZVM__ with ZVM Version 9.7
+
 Usage
 =======
 
@@ -20,16 +22,18 @@ Usage is really simple. Just need a user to login to Zerto ZVM and the url.
 
 ```
 Usage of /zerto-exporter:
-  -listen-address string
-    	The address to lisiten on for HTTP requests. (default ":9403")
+  -listen.address string
+        The address to lisiten on for HTTP requests. (default ":9403")
+  -log.level string
+        Log-Level (debug, warn, error) (default "info")
+  -version
+        Prints current version
   -zerto.password string
-    	Zerto API User Password
-  -zerto.session-age int
-    	Zerto Session recreation Time (default 3600)
+        Zerto API User Password
   -zerto.url string
-    	Zerto URL to connect https://zvm.local.host:9669
+        Zerto URL to connect https://zvm.local.host:9669
   -zerto.username string
-    	Zerto API User
+        Zerto API User
 ```
 
 HowTo Run
