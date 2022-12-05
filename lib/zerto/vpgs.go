@@ -12,35 +12,35 @@ import "encoding/json"
 // /v1/vpgs
 //
 type ZertoVpg struct {
-	ActualRPO		int
-	BackupEnabled		bool
+	ActualRPO							int
+	BackupEnabled					bool
 	ConfiguredRpoSeconds	int
-	IOPs			int
-	HistoryStatusApi	HistoryStatusApi
-	OrganizationName	string
-	Priority		int
-	ProgressPercentage	int
-	SourceSite		string
-	TargetSite		string
-	ThroughputInMB		float64
-	UsedStorageInMB		int
-	VpgName			string
-	VmsCount		int
-	Status			int
-	SubStatus		int
+	IOPs									int
+	HistoryStatusApi			HistoryStatusApi
+	OrganizationName			string
+	Priority							int
+	ProgressPercentage		int
+	SourceSite						string
+	TargetSite						string
+	ThroughputInMB				float64
+	UsedStorageInMB				int
+	VpgName								string
+	VmsCount							int
+	Status								int
+	SubStatus							int
 }
 
 type HistoryStatusApi struct {
-	ActualHistoryInMinutes		int
+	ActualHistoryInMinutes			int
 	ConfiguredHistoryInMinutes	int
-	EarliestCheckpoint		EarliestCheckpoint
+	EarliestCheckpoint					EarliestCheckpoint
 }
 
 type EarliestCheckpoint struct {
-	CheckpointIdentifier		string
-	Tag				string
-	TimeStamp			string
-	Vss				bool
+	CheckpointIdentifier	string
+	Tag										string
+	TimeStamp							string
+	Vss										bool
 }
 
 func (z *Zerto) ListVpg() []ZertoVpg {

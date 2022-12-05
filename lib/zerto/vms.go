@@ -11,31 +11,31 @@ import "encoding/json"
 type ZertoVm struct {
 	ActualRPO		int
 //	EnabledActions		*ZertoEnabledActions
-	Entities		*ZertoVmEntities
-	IOPs			int
-	IsVmExists		bool
-	JournalHardLimit	*ZertoVmLimit
-	JournalUsedStorageMb	int
+	Entities								*ZertoVmEntities
+	IOPs										int
+	IsVmExists							bool
+	JournalHardLimit				*ZertoVmLimit
+	JournalUsedStorageMb		int
 	JournalWarningThreshold	*ZertoVmLimit
 //	LastTest
 //	Link
-	OrganizationName	string
+	OrganizationName				string
 	OutgoingBandWidthInMbps	float64
 	Priority		int
 //	ProtectedSite
 	ProvisionedStorageInMB	int
 //	RecoverySite
-	SourceSite		string
-	Status			int
-	SubStatus		int
-	TargetSite		string
-	ThroughputInMB		float64
-	UsedStorageInMB		int
-	VmIdentifier		string
-	VmName			string
-	Volumes			[]*ZertoVmVolume
-	VpgIdentifier		string
-	VpgName			string
+	SourceSite							string
+	Status									int
+	SubStatus								int
+	TargetSite							string
+	ThroughputInMB					float64
+	UsedStorageInMB					int
+	VmIdentifier						string
+	VmName									string
+	Volumes									[]*ZertoVmVolume
+	VpgIdentifier						string
+	VpgName									string
 }
 
 type ZertoVmVolume struct {
@@ -43,7 +43,7 @@ type ZertoVmVolume struct {
 }
 
 type ZertoVmLimit struct {
-	LimitType		int
+	LimitType			int
 	LimitValue		int
 }
 

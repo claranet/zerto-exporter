@@ -10,13 +10,13 @@ import "encoding/json"
 
 type ZertoTask struct {
 	CompleteReason	string
-	Completed	string
-	InitiatedBy	string
-	IsCancellable	bool
-	Started		string
-	Status		*ZertoTaskStatus
+	Completed				string
+	InitiatedBy			string
+	IsCancellable		bool
+	Started					string
+	Status					*ZertoTaskStatus
 	TaskIdentifier	string
-	Type		string
+	Type						string
 }
 
 type ZertoTaskStatus struct {

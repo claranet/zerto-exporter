@@ -14,14 +14,14 @@ import (
 type ZertoAlert struct {
 //	AffectedVpgs
 //	AffectedZorgs
-	Description	string
-	Entity		string
+	Description			string
+	Entity					string
 	HelpIdentifier	string
-	IsDismissed	bool
-	Level		string
+	IsDismissed			bool
+	Level						string
 //	Link
 //	Site
-	TurnedOn	string
+	TurnedOn				string
 }
 
 func (z *Zerto) ListAlerts() []ZertoAlert {

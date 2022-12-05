@@ -12,25 +12,25 @@ import "encoding/json"
 // /v1/localsite
 //
 type ZertoLocalsite struct {
-	ContactEmail			string
-	ContactName			string
-	ContactPhone			string
-	IpAddress			string
+	ContactEmail								string
+	ContactName									string
+	ContactPhone								string
+	IpAddress										string
 	IsReplicationToSelfEnabled	bool
-	Link				*ZertoLink
-	Location			string
-	SiteIdentifier			string
-	SiteName			string
-	SiteType			string
-	UtcOffsetInMinutes		int
-	Version				string
+	Link												*ZertoLink
+	Location										string
+	SiteIdentifier							string
+	SiteName										string
+	SiteType										string
+	UtcOffsetInMinutes					int
+	Version											string
 }
 
 type ZertoLink struct {
-	Href				string `json:"href"`
-	Identifier			string `json:"identifier"`
-	Rel				string `json:"rel"`
-	Type				string `json:"type"`
+	Href												string `json:"href"`
+	Identifier									string `json:"identifier"`
+	Rel													string `json:"rel"`
+	Type												string `json:"type"`
 }
 
 //

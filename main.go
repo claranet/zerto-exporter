@@ -30,13 +30,13 @@ import (
 const AppVersion = "0.2.1"
 
 var (
-	namespace		= "zerto"
-	zertoUrl		= flag.String("zerto.url", "", "Zerto URL to connect https://zvm.local.host:9669")
-	zertoUser		= flag.String("zerto.username", "", "Zerto API User")
-	zertoPassword		= flag.String("zerto.password", "", "Zerto API User Password")
-	zertoMaxSessionAge	= flag.Int("zerto.session-age", 3600, "Zerto Session recreation Time")
-	listenAddress		= flag.String("listen-address", ":9403", "The address to lisiten on for HTTP requests.")
-	version         = flag.Bool("version", false, "Prints current version")
+	namespace						= "zerto"
+	zertoUrl						= flag.String("zerto.url", "", "Zerto URL to connect https://zvm.local.host:9669")
+	zertoUser						= flag.String("zerto.username", "", "Zerto API User")
+	zertoPassword				= flag.String("zerto.password", "", "Zerto API User Password")
+	listenAddress				= flag.String("listen.address", ":9403", "The address to lisiten on for HTTP requests.")
+	logLevel						= flag.String("log.level", "info", "Log-Level (debug, warn, error)")
+	version							= flag.Bool("version", false, "Prints current version")
 )
 
 var (
@@ -411,38 +411,15 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func closeZertoSession() {
-	log.Debug("Close Session")
-
-	zertoApi.CloseSession()
-	zertoSessionAge = 0
-}
-
-func openZertoSession() {
-	var sessionAge int
-	sessionAge = int(time.Now().Unix() - zertoSessionAge)
-	log.Debugf("Session Age: %ds", sessionAge)
-
-	if sessionAge > *zertoMaxSessionAge {
-		log.Debug("Refresh Session")
-		closeZertoSession()
-	}
-
-	if !zertoApi.IsSessionOpen() {
-		log.Debug("Create new Session")
-		err := zertoApi.OpenSession()
-		if err != nil {
-			log.Fatal("Failed to open Session - Check credetials")
-			os.Exit(1)
-		}
-
-		zertoSessionAge = time.Now().Unix()
-	}
-}
-
 func main() {
-	log.SetLevel(log.DebugLevel)
 	flag.Parse()
+	log.SetLevel(log.InfoLevel)
+
+	if len(*logLevel) > 0 {
+		level, _ := log.ParseLevel(*logLevel)
+		log.Info( "Set LogLevel to " + (*logLevel) )
+		log.SetLevel( level )
+	}
 
 	if *version {
 		fmt.Println(AppVersion)
@@ -452,7 +429,11 @@ func main() {
 	log.Debug("Create Zerto instance")
 	zertoApi = zerto.NewZerto(*zertoUrl, *zertoUser, *zertoPassword)
 
-	openZertoSession()
+	err := zertoApi.OpenSession()
+	if err != nil {
+		log.Fatal("Failed to open Session - Check credetials")
+		os.Exit(1)
+	}
 
 	if ! zertoApi.IsSessionOpen() {
 		log.Fatal("No Session opened")
@@ -474,7 +455,7 @@ func main() {
 	})
 
 	log.Printf("Starting Server: %s", *listenAddress)
-	err := http.ListenAndServe(*listenAddress, nil)
+	err = http.ListenAndServe(*listenAddress, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
