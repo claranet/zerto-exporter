@@ -42,7 +42,7 @@ var (
 var (
 	// Zerto API
 	zertoApi		*zerto.Zerto
-	maxSessionAge int = 10 * 60 // n * 60 Seconds
+	maxSessionAge int = 5 * 60 // n * 60 Seconds
 )
 
 type Exporter struct {

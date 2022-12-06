@@ -1,6 +1,6 @@
 
 BIN_NAME = zerto-exporter
-DOCKER_IMAGE_NAME ?= zerto-exporter
+DOCKER_IMAGE_NAME ?= claranet/zerto-exporter
 GOPATH = $($pwd)
 
 all: linux darwin windows
@@ -25,7 +25,8 @@ windows: prepare
 
 docker:
 	@echo ">> Compile using docker container"
-	@docker build -t "$(DOCKER_IMAGE_NAME)" .
+	@docker build -t $(DOCKER_IMAGE_NAME):latest .
+	@docker tag $(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAME):v1.0.1
 
 prepare:
 	@echo "Create output directory ./bin/"
