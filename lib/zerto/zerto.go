@@ -29,6 +29,8 @@ type Zerto struct {
 
 	sessionToken	string
 	authProvider	string
+
+	sessionCreated int64
 }
 
 func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*http.Response, error)  {
@@ -38,7 +40,7 @@ func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*ht
 	var netClient = http.Client{Transport: tr}
 
 	body := p.body
-	log.Debug(body)
+	log.Trace(body)
 
 	if(len(p.params) > 0) {
 		_url += "?" + p.params.Encode()
@@ -67,7 +69,7 @@ func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*ht
 		}
 	}
 
-	log.Debug("Reuest Headers ", req.Header)
+	log.Trace("Reuest Headers ", req.Header)
 
 	resp, _ := netClient.Do(req)
 	// if err != nil {	log.Fatal(err); return nil, err }

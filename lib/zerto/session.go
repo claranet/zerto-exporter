@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"errors"
+	"time"
 )
 
 func (z *Zerto) IsSessionOpen() bool {
@@ -51,10 +52,13 @@ func (z *Zerto) OpenSession() error {
 		z.sessionToken = resp.Header.Get("x-zerto-session")
 	}
 
-	log.Debug("Session Token: " + z.sessionToken)
+	log.Trace("Session Token: " + z.sessionToken)
 	if ! z.IsSessionOpen() {
 		return errors.New("Cannot open a Session")
 	}
+
+	// Store Session Create timestamp
+	z.sessionCreated = time.Now().Unix()
 
 	return nil
 }
@@ -64,4 +68,17 @@ func (z *Zerto) CloseSession() {
 		z.makeRequest("DELETE", "/v1/session", RequestParams{})
 	}
 	z.sessionToken = ""
+}
+
+func (z *Zerto) RefreshSession() {
+	z.CloseSession()
+	z.OpenSession()
+}
+
+func (z* Zerto) GetSessionAge() int {
+	if !z.IsSessionOpen() {
+		return 0
+	}
+
+	return int( time.Now().Unix() - z.sessionCreated )
 }

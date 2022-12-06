@@ -42,8 +42,7 @@ var (
 var (
 	// Zerto API
 	zertoApi		*zerto.Zerto
-	// Current Session Age
-	zertoSessionAge		int64		= 0
+	maxSessionAge int = 10 * 60 // n * 60 Seconds
 )
 
 type Exporter struct {
@@ -253,6 +252,13 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
+	log.Debugf("Session Age: %v", zertoApi.GetSessionAge())
+
+	if zertoApi.GetSessionAge() > maxSessionAge {
+		log.Info("Refresh Session")
+		zertoApi.RefreshSession()
+	}
+
 	vpgs := zertoApi.ListVpg()
 
 	for i:=0; i<len(vpgs); i++ {
@@ -295,7 +301,6 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	g.Collect(ch)
 
 	license := zertoApi.LicenseInformations()
-	log.Debug(license.Details.ExpiryTime)
 	t, _ := time.Parse("2006-01-02T15:04:05.000Z", license.Details.ExpiryTime)
 	g = e.ZertoLicenseExpiryTime.WithLabelValues()
 	g.Set(float64(t.Unix()))
