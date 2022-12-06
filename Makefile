@@ -26,7 +26,7 @@ windows: prepare
 docker:
 	@echo ">> Compile using docker container"
 	@docker build -t $(DOCKER_IMAGE_NAME):latest .
-	@docker tag $(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAME):v1.0.1
+	@docker tag $(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAME):v1.0.2
 
 prepare:
 	@echo "Create output directory ./bin/"
