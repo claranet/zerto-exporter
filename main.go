@@ -27,7 +27,7 @@ import (
 
 )
 
-const AppVersion = "1.0.0"
+const AppVersion = "1.0.1"
 
 var (
 	namespace						= "zerto"
