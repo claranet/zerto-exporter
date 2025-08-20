@@ -25,7 +25,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const AppVersion = "1.0.2"
+const AppVersion = "1.0.3"
 
 var (
 	namespace     = "zerto"
