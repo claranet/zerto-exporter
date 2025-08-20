@@ -7,46 +7,47 @@
 package zerto
 
 import (
-//	"os"
+	//	"os"
 	// "github.com/prometheus/log"
+	"crypto/tls"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
-	"crypto/tls"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type RequestParams struct {
-	body, header	string
-	params				url.Values
+	body, header string
+	params       url.Values
 }
 
 type Zerto struct {
-	url		string
-	username	string
-	password	string
+	url      string
+	username string
+	password string
 
-	sessionToken	string
-	authProvider	string
+	sessionToken string
+	authProvider string
 
 	sessionCreated int64
 }
 
-func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*http.Response, error)  {
+func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*http.Response, error) {
 	_url := z.url + "/" + strings.TrimLeft(action, "/")
 
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, }
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	var netClient = http.Client{Transport: tr}
 
 	body := p.body
 	log.Trace(body)
 
-	if(len(p.params) > 0) {
+	if len(p.params) > 0 {
 		_url += "?" + p.params.Encode()
 	}
 
-	// log.Debug(_url)
+	log.Debugf("URL: %s", _url)
 	req, _ := http.NewRequest(reqType, _url, strings.NewReader(body))
 	// if err != nil {
 	// 	log.Fatal(err)
@@ -65,25 +66,25 @@ func (z *Zerto) makeRequest(reqType string, action string, p RequestParams) (*ht
 		if z.sessionToken == "" {
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		} else {
-			req.Header.Set("Authorization", "Bearer " + z.sessionToken)
+			req.Header.Set("Authorization", "Bearer "+z.sessionToken)
 		}
 	}
 
 	log.Trace("Reuest Headers ", req.Header)
-
 	resp, _ := netClient.Do(req)
+	b, _ := httputil.DumpResponse(resp, true)
+	log.Trace("Response: ", string(b))
+
 	// if err != nil {	log.Fatal(err); return nil, err }
 
 	return resp, nil
 }
 
-
-
 func NewZerto(url string, username string, password string) *Zerto {
-	return &Zerto {
-		url: url,
-		username: username,
-		password: password,
+	return &Zerto{
+		url:          url,
+		username:     username,
+		password:     password,
 		sessionToken: "",
 		authProvider: "zerto",
 	}

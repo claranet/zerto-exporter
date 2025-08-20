@@ -1,5 +1,4 @@
 ---
-version: "3"
 services:
   exporter:
     image: claranet/zerto-exporter

@@ -1,4 +1,3 @@
-
 //
 // zerto-exporter
 //
@@ -14,76 +13,75 @@ import (
 	"github.com/claranet/zerto-exporter/lib/zerto"
 	log "github.com/sirupsen/logrus"
 
-	"os"
-	"fmt"
 	"flag"
+	"fmt"
 	"net/http"
-	"time"
+	"os"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 )
 
 const AppVersion = "1.0.2"
 
 var (
-	namespace						= "zerto"
-	zertoUrl						= flag.String("zerto.url", "", "Zerto URL to connect https://zvm.local.host:9669")
-	zertoUser						= flag.String("zerto.username", "", "Zerto API User")
-	zertoPassword				= flag.String("zerto.password", "", "Zerto API User Password")
-	listenAddress				= flag.String("listen.address", ":9403", "The address to lisiten on for HTTP requests.")
-	logLevel						= flag.String("log.level", "info", "Log-Level (debug, warn, error)")
-	version							= flag.Bool("version", false, "Prints current version")
+	namespace     = "zerto"
+	zertoUrl      = flag.String("zerto.url", "", "Zerto URL to connect https://zvm.local.host:9669")
+	zertoUser     = flag.String("zerto.username", "", "Zerto API User")
+	zertoPassword = flag.String("zerto.password", "", "Zerto API User Password")
+	listenAddress = flag.String("listen.address", ":9403", "The address to lisiten on for HTTP requests.")
+	logLevel      = flag.String("log.level", "info", "Log-Level (debug, warn, error)")
+	version       = flag.Bool("version", false, "Prints current version")
 )
 
 var (
 	// Zerto API
-	zertoApi		*zerto.Zerto
+	zertoApi      *zerto.Zerto
 	maxSessionAge int = 5 * 60 // n * 60 Seconds
 )
 
 type Exporter struct {
-	ZertoVpgActualRpo							*prometheus.GaugeVec
-	ZertoVpgCountVm								*prometheus.GaugeVec
-	ZertoVpgThroughputInMB				*prometheus.GaugeVec
-	ZertoVpgUsedStorageInMB				*prometheus.GaugeVec
-	ZertoVpgConfiguredRpoSeconds	*prometheus.GaugeVec
-	ZertoVpgIops									*prometheus.GaugeVec
-	ZertoVpgStatus								*prometheus.GaugeVec
-	ZertoVpgSubStatus							*prometheus.GaugeVec
+	ZertoVpgActualRpo            *prometheus.GaugeVec
+	ZertoVpgCountVm              *prometheus.GaugeVec
+	ZertoVpgThroughputInMB       *prometheus.GaugeVec
+	ZertoVpgUsedStorageInMB      *prometheus.GaugeVec
+	ZertoVpgConfiguredRpoSeconds *prometheus.GaugeVec
+	ZertoVpgIops                 *prometheus.GaugeVec
+	ZertoVpgStatus               *prometheus.GaugeVec
+	ZertoVpgSubStatus            *prometheus.GaugeVec
 
-	ZertoLocalsiteReplicationToSelf	*prometheus.GaugeVec
-	ZertoPeersitePairingStatus			*prometheus.GaugeVec
+	ZertoLocalsiteReplicationToSelf *prometheus.GaugeVec
+	ZertoPeersitePairingStatus      *prometheus.GaugeVec
 
-	ZertoVraStatus									*prometheus.GaugeVec
-	ZertoVraProtectedVms						*prometheus.GaugeVec
-	ZertoVraProtectedVolumes				*prometheus.GaugeVec
-	ZertoVraProtectedVpgs						*prometheus.GaugeVec
+	ZertoVraStatus           *prometheus.GaugeVec
+	ZertoVraProtectedVms     *prometheus.GaugeVec
+	ZertoVraProtectedVolumes *prometheus.GaugeVec
+	ZertoVraProtectedVpgs    *prometheus.GaugeVec
 
-	ZertoVmActualRpo								*prometheus.GaugeVec
-	ZertoVmIops											*prometheus.GaugeVec
-	ZertoVmJournalUsedStorageMb			*prometheus.GaugeVec
-	ZertoVmProvisionedStorageInMB		*prometheus.GaugeVec
-	ZertoVmOutgoingBandWidthInMbps	*prometheus.GaugeVec
-	ZertoVmThroughputInMB						*prometheus.GaugeVec
-	ZertoVmUsedStorageInMB					*prometheus.GaugeVec
-	ZertoVmStatus										*prometheus.GaugeVec
+	ZertoVmActualRpo               *prometheus.GaugeVec
+	ZertoVmIops                    *prometheus.GaugeVec
+	ZertoVmJournalUsedStorageMb    *prometheus.GaugeVec
+	ZertoVmProvisionedStorageInMB  *prometheus.GaugeVec
+	ZertoVmOutgoingBandWidthInMbps *prometheus.GaugeVec
+	ZertoVmThroughputInMB          *prometheus.GaugeVec
+	ZertoVmUsedStorageInMB         *prometheus.GaugeVec
+	ZertoVmStatus                  *prometheus.GaugeVec
 
-	ZertoTaskStatus									*prometheus.GaugeVec
-	ZertoTaskProgress								*prometheus.GaugeVec
-	ZertoTaskStarted								*prometheus.GaugeVec
-	ZertoTaskCompleted							*prometheus.GaugeVec
+	ZertoTaskStatus    *prometheus.GaugeVec
+	ZertoTaskProgress  *prometheus.GaugeVec
+	ZertoTaskStarted   *prometheus.GaugeVec
+	ZertoTaskCompleted *prometheus.GaugeVec
 
-	ZertoAlertsCount								*prometheus.GaugeVec
+	ZertoAlertsCount *prometheus.GaugeVec
 
-	ZertoLicenseExpiryTime					*prometheus.GaugeVec
+	ZertoLicenseExpiryTime *prometheus.GaugeVec
 }
 
 func NewExporter() *Exporter {
-	defaultLabels := []string {"vpg", "org"}
+	defaultLabels := []string{"vpg", "org"}
 	vmDefaultLabels := []string{"org", "vm", "vpg"}
 	taskDefaultLabels := []string{"taskid", "type"}
 	alertsDefaultLabels := []string{"level"}
@@ -92,123 +90,121 @@ func NewExporter() *Exporter {
 		ZertoVpgCountVm: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_vm_count",
 			Help: "Count Virtual machines in VPG.",
-		}, defaultLabels, ),
+		}, defaultLabels),
 		ZertoVpgThroughputInMB: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_throughput",
 			Help: "Throughput of this VPG in MB (megabytes)",
-		}, defaultLabels, ),
+		}, defaultLabels),
 		ZertoVpgUsedStorageInMB: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_used_storage",
 			Help: "Used Storage in MB (megabytes)",
-		}, defaultLabels, ),
+		}, defaultLabels),
 		ZertoVpgActualRpo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_actual_rpo",
 			Help: "Actual RPO of the VPG.",
-		}, append(defaultLabels, "source", "target"), ),
+		}, append(defaultLabels, "source", "target")),
 		ZertoVpgConfiguredRpoSeconds: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_configured_rpo",
 			Help: "Configured RPO of the VPG.",
-		}, defaultLabels, ),
+		}, defaultLabels),
 		ZertoVpgIops: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_iops",
 			Help: "IOPs of the VPG.",
-		}, defaultLabels, ),
+		}, defaultLabels),
 		ZertoVpgStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_status",
 			Help: "Status of VPG. 0=Initializing, 1=MeetingSLA, 2=NotMeetingSLA, 3=RpoNotMeetingSLA, 4=HistoryNotMeetingSLA, 5=FailingOver, 6=Moving, 7=Deleting, 8=Recovered",
-		}, defaultLabels, ),
+		}, defaultLabels),
 		ZertoVpgSubStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vpg_substatus",
 			Help: "SubStatus of VPG.",
-		}, defaultLabels, ),
+		}, defaultLabels),
 
 		ZertoLocalsiteReplicationToSelf: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "localsite_replication_to_self",
 			Help: "Is Replication to self enabled on localsite",
-		}, []string{"location", "version"}, ),
+		}, []string{"location", "version"}),
 		ZertoPeersitePairingStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "peersite_pairingstatus",
 			Help: "Pairing status with remote site. 0=Paired, 1=Unpairing, 2=Unpaired",
-		}, []string{"peername", "location", "version"}, ),
+		}, []string{"peername", "location", "version"}),
 
 		ZertoVraStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vra_status",
 			Help: "Status of Zerto VRA Appliance. 0=Installed, 1=UnsupportedEsxVersion, 2=NotInstalled, 3=Installing, 4=Removing, 5=InstallationError, 6=HostPasswordChanged, 7=UpdatingIpSettings, 8=DuringChangeHost, 9=HostInMaintenanceMode",
-		}, []string{"vra_group", "vra_name"}, ),
+		}, []string{"vra_group", "vra_name"}),
 		ZertoVraProtectedVms: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vra_protected_vms",
 			Help: "Count Protected VMs of VRA",
-		}, []string{"vra_group", "vra_name"}, ),
+		}, []string{"vra_group", "vra_name"}),
 		ZertoVraProtectedVolumes: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vra_protected_volumes",
 			Help: "Count Protected volumes of VRA",
-		}, []string{"vra_group", "vra_name"}, ),
+		}, []string{"vra_group", "vra_name"}),
 		ZertoVraProtectedVpgs: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vra_protected_vpgs",
 			Help: "Count Protected VPGs of VRA",
-		}, []string{"vra_group", "vra_name"}, ),
-
+		}, []string{"vra_group", "vra_name"}),
 
 		ZertoVmActualRpo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_actual_rpo",
 			Help: "Acutal RPO of VM",
-		}, vmDefaultLabels, ),
+		}, vmDefaultLabels),
 		ZertoVmIops: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_iops",
 			Help: "IOPs of VM (Input/Outputs per second)",
-		}, vmDefaultLabels, ),
+		}, vmDefaultLabels),
 		ZertoVmJournalUsedStorageMb: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_journal_used_storage",
 			Help: "Used Storage in MB (megabyte)",
-		}, vmDefaultLabels, ),
+		}, vmDefaultLabels),
 		ZertoVmProvisionedStorageInMB: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_provisioned_storage",
 			Help: "Provisioned storage in MB (megabytes)",
-		}, vmDefaultLabels, ),
+		}, vmDefaultLabels),
 		ZertoVmOutgoingBandWidthInMbps: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_outgoing_bandwith",
 			Help: "Outgoing Bandwith in MB/s (megabytes per seconds)",
-		}, vmDefaultLabels, ),
+		}, vmDefaultLabels),
 		ZertoVmThroughputInMB: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_throughput",
 			Help: "Throughput in MB (megabyte)",
-		}, vmDefaultLabels, ),
+		}, vmDefaultLabels),
 		ZertoVmUsedStorageInMB: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_used_storage",
 			Help: "Used Storage in MB (megabyte)",
-		}, vmDefaultLabels, ),
+		}, vmDefaultLabels),
 		ZertoVmStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "vm_status",
 			Help: "Status of VM. 0=Initializing, 1=MeetingSLA, 2=NotMeetingSLA, 3=RpoNotMeetingSLA, 4=HistoryNotMeetingSLA, 5=FailingOver, 6=Moving, 7=Deleting, 8=Recovered",
-		}, vmDefaultLabels, ),
-
+		}, vmDefaultLabels),
 
 		ZertoTaskStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "task_status",
 			Help: "Status of Task. 0=FirstUnusedValue, 1=InProgress, 2=WaitingForUserInput, 3=Paused, 4=Failed, 5=Stopped, 6=Completed, 7=Cancelling",
-		}, taskDefaultLabels, ),
+		}, taskDefaultLabels),
 		ZertoTaskProgress: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "task_progress",
 			Help: "Status progress of Task oin percent",
-		}, taskDefaultLabels, ),
+		}, taskDefaultLabels),
 		ZertoTaskStarted: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "task_started",
 			Help: "Task start time",
-		}, taskDefaultLabels, ),
+		}, taskDefaultLabels),
 		ZertoTaskCompleted: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "task_completed",
 			Help: "Task end time",
-		}, taskDefaultLabels, ),
+		}, taskDefaultLabels),
 
 		ZertoAlertsCount: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "alerts_count",
 			Help: "Count Zerto Alerts, level: error|warning",
-		}, alertsDefaultLabels, ),
+		}, alertsDefaultLabels),
 
 		ZertoLicenseExpiryTime: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace, Name: "license_expireration_time",
 			Help: "License Expiry Time",
-		}, []string {}, ),
+		}, []string{}),
 	}
 }
 
@@ -249,7 +245,6 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	e.ZertoLicenseExpiryTime.Describe(ch)
 }
 
-
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	log.Debugf("Session Age: %v", zertoApi.GetSessionAge())
@@ -261,7 +256,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	vpgs := zertoApi.ListVpg()
 
-	for i:=0; i<len(vpgs); i++ {
+	for i := 0; i < len(vpgs); i++ {
 		g := e.ZertoVpgCountVm.WithLabelValues(vpgs[i].VpgName, vpgs[i].OrganizationName)
 		g.Set(float64(vpgs[i].VmsCount))
 		g.Collect(ch)
@@ -297,7 +292,11 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	local := zertoApi.Localsite()
 	g := e.ZertoLocalsiteReplicationToSelf.WithLabelValues(local.Location, local.Version)
-	if local.IsReplicationToSelfEnabled { g.Set(1) } else { g.Set(0) }
+	if local.IsReplicationToSelfEnabled {
+		g.Set(1)
+	} else {
+		g.Set(0)
+	}
 	g.Collect(ch)
 
 	license := zertoApi.LicenseInformations()
@@ -307,14 +306,14 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	g.Collect(ch)
 
 	peers := zertoApi.ListPeersites()
-	for i:=0; i<len(peers);i++ {
+	for i := 0; i < len(peers); i++ {
 		g = e.ZertoPeersitePairingStatus.WithLabelValues(peers[i].PeerSiteName, peers[i].Location, peers[i].Version)
 		g.Set(float64(peers[i].PairingStatus))
 		g.Collect(ch)
 	}
 
 	vras := zertoApi.ListVras()
-	for i:=0;i<len(vras);i++ {
+	for i := 0; i < len(vras); i++ {
 		g := e.ZertoVraStatus.WithLabelValues(vras[i].VraGroup, vras[i].VraName)
 		g.Set(float64(vras[i].Status))
 		g.Collect(ch)
@@ -331,10 +330,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	vms := zertoApi.ListVms()
 	log.Debugf("Count VM's: %v", len(vms))
-	for i:=0;i<len(vms);i++ {
+	for i := 0; i < len(vms); i++ {
 		var (
 			orgName = vms[i].OrganizationName
-			vmName = vms[i].VmName
+			vmName  = vms[i].VmName
 			vpgName = vms[i].VpgName
 		)
 
@@ -367,9 +366,9 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	tasks := zertoApi.ListTasks()
 	re := regexp.MustCompile("[0-9]+")
 
-	for i:=0;i<len(tasks);i++ {
+	for i := 0; i < len(tasks); i++ {
 		var (
-			taskId string = tasks[i].TaskIdentifier
+			taskId   string = tasks[i].TaskIdentifier
 			taskType string = tasks[i].Type
 		)
 
@@ -394,7 +393,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	{
 		var cntErrors, cntWarnings, cntUnknown int = 0, 0, 0
-		for i:=0;i<len(alerts);i++ {
+		for i := 0; i < len(alerts); i++ {
 			if alerts[i].Level == "Warning" {
 				cntWarnings++
 			} else if alerts[i].Level == "Error" {
@@ -422,8 +421,8 @@ func main() {
 
 	if len(*logLevel) > 0 {
 		level, _ := log.ParseLevel(*logLevel)
-		log.Info( "Set LogLevel to " + (*logLevel) )
-		log.SetLevel( level )
+		log.Info("Set LogLevel to " + (*logLevel))
+		log.SetLevel(level)
 	}
 
 	if *version {
@@ -440,7 +439,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if ! zertoApi.IsSessionOpen() {
+	if !zertoApi.IsSessionOpen() {
 		log.Fatal("No Session opened")
 		os.Exit(1)
 	}

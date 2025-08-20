@@ -7,11 +7,12 @@
 package zerto
 
 import (
- 	log "github.com/sirupsen/logrus"
 	"encoding/json"
-	"net/url"
 	"errors"
+	"net/url"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func (z *Zerto) IsSessionOpen() bool {
@@ -37,6 +38,7 @@ func (z *Zerto) OpenSession() error {
 		body.Add("client_id", "zerto-client")
 		body.Add("username", z.username)
 		body.Add("password", z.password)
+		body.Add("scope", "email profile openid")
 
 		resp, _ := z.makeRequest("POST", "/auth/realms/zerto/protocol/openid-connect/token", RequestParams{body: body.Encode()})
 
@@ -53,7 +55,7 @@ func (z *Zerto) OpenSession() error {
 	}
 
 	log.Trace("Session Token: " + z.sessionToken)
-	if ! z.IsSessionOpen() {
+	if !z.IsSessionOpen() {
 		return errors.New("Cannot open a Session")
 	}
 
@@ -75,10 +77,10 @@ func (z *Zerto) RefreshSession() {
 	z.OpenSession()
 }
 
-func (z* Zerto) GetSessionAge() int {
+func (z *Zerto) GetSessionAge() int {
 	if !z.IsSessionOpen() {
 		return 0
 	}
 
-	return int( time.Now().Unix() - z.sessionCreated )
+	return int(time.Now().Unix() - z.sessionCreated)
 }

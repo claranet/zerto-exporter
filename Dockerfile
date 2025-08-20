@@ -2,7 +2,7 @@
 #
 # Builder image, where we build the example.
 
-FROM golang:1.19 AS builder
+FROM golang:1.25 AS builder
 
 # ENV GOPATH /go/src/zerto-exporter
 
